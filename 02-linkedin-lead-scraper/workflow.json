@@ -1,0 +1,474 @@
+{
+  "name": "Linkedin Lead Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Natural Language Input Processing\n\n### What You Can Ask:\n- \"Find 50 React developers in San Francisco\"\n- \"Search for AI automation specialists in Mumbai\" \n- \"Get me 25 startup founders with email addresses\"\n- \"Find senior data scientists at YC companies\"\n\n### AI Parser Features:\n- Extracts roles, location, lead count, filters\n- Handles multiple variations and synonyms\n- Supports complex queries with multiple criteria\n- Validates output with structured JSON schema",
+        "height": 708,
+        "width": 640,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -224
+      ],
+      "id": "b0284702-e48c-4270-9117-90397953c0c6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Smart Search & Data Extraction\n\n### Search Optimization:\n- Builds targeted LinkedIn site searches\n- Combines role keywords with location filters\n- Optimizes query structure for better results\n- Handles multiple locations (e.g., \"SF or NYC\")\n\n### Data Extraction:\n- Scrapes name, role, company, connections\n- Extracts email addresses from snippets\n- Captures LinkedIn profile URLs\n- Adds timestamp for tracking",
+        "height": 720,
+        "width": 592
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -224
+      ],
+      "id": "67b70c8b-3617-4191-bd12-6abbd4622d13",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Data Storage & Management\n\n### Google Sheets Output:\n- **Name** - Full name extracted from profile\n- **Role** - Job title and position  \n- **Company** - Current employer\n- **Connections** - Follower/connection count\n- **LinkedIn URL** - Direct profile link\n- **Email** - Extracted email address (if available)\n- **Snippet** - Profile description preview\n- **Scraped At** - Timestamp of data collection\n\n### 💡 Pro Tips:\n- Data is automatically organized and timestamped\n- Email extraction helps with outreach campaigns\n- Results can be filtered and sorted in sheets",
+        "height": 720,
+        "width": 440,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -224
+      ],
+      "id": "6fcaf357-be92-4035-a14e-b5e8d0cf7d78",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -384,
+        352
+      ],
+      "id": "8096cfc8-6071-4604-898d-65443c9bf3a0",
+      "name": "Open Ai"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"platform\": {\n      \"type\": \"string\",\n      \"enum\": [\"LinkedIn\"]\n    },\n    \"roles\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"lead_count\": {\n      \"type\": \"integer\",\n      \"minimum\": 1,\n      \"maximum\": 1000\n    },\n    \"filters\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"location\": {\n      \"type\": \"string\"\n    },\n    \"keywords\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\"platform\", \"roles\", \"lead_count\", \"filters\", \"location\", \"keywords\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        352
+      ],
+      "id": "dd51b4b8-044d-49b3-953a-fa9c61107348",
+      "name": "JSON Structure Validator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an instruction parser for an AI lead scraping system. Parse the user request and extract structured information.\nRules:\n1. Platform Detection\nLook for platform mention in user query. If no platform is mentioned, default to \"LinkedIn\".\n2. Role Extraction\nExtract job titles, skills, or professional categories. Include variations and synonyms:\n\n\"AI engineer\" OR \"ML engineer\" OR \"Machine Learning engineer\"\n\"founder\" OR \"CEO\" OR \"co-founder\"\n\"developer\" OR \"software engineer\" OR \"programmer\"\n\"data scientist\" OR \"data analyst\" OR \"ML researcher\"\n\n3. Lead Count\nExtract numbers mentioned in phrases like:\n\n\"20 leads\", \"find 50\", \"at least 30\", \"I want 25\"\nIf not specified, default to 10\n\n4. Filters\nExtract constraints and qualifiers including:\nCompany Type:\n\n\"startup\", \"enterprise\", \"funded company\", \"series A\", \"series B\", \"YC company\", \"unicorn\"\n\"small company\", \"large corporation\", \"Fortune 500\"\n\nExperience Level:\n\n\"senior\", \"junior\", \"mid-level\", \"entry-level\"\n\"5+ years\", \"10+ years experience\", \"recent graduate\"\n\"lead\", \"principal\", \"staff\", \"director level\"\n\nContact Information:\n\n\"email available\", \"LinkedIn profile\", \"phone number\", \"contact details\"\n\nIndustry Specific:\n\n\"fintech\", \"healthcare\", \"SaaS\", \"e-commerce\", \"edtech\", \"blockchain\"\n\"AI/ML\", \"cybersecurity\", \"biotech\", \"cleantech\"\n\nCompany Size:\n\n\"team of 10-50\", \"500+ employees\", \"small team\", \"large organization\"\n\nFunding Status:\n\n\"recently funded\", \"profitable\", \"bootstrap\", \"venture backed\"\n\"raised funding\", \"IPO\", \"acquired\"\n\n5. Location\nExtract geographic information:\n\nCities: \"San Francisco\", \"New York\", \"Mumbai\", \"London\"\nStates/Regions: \"California\", \"Texas\", \"Maharashtra\"\nCountries: \"United States\", \"India\", \"United Kingdom\"\nRemote preferences: \"remote\", \"remote-first\", \"distributed team\"\nMultiple locations: \"SF or NYC\", \"US or Canada\"\n\n6. Keywords\nExtract relevant search terms and synonyms that would be useful for search optimization:\n\nTechnical skills, tools, programming languages\nIndustry buzzwords and terminology\nCompany descriptors and qualifiers\n\nOutput Format:\nRespond ONLY with valid JSON following the specified schema. No explanations, comments, or additional text.\nExample Input Processing:\nInput: \"search for profile which have AI automation and are located in Mumbai\"\nExpected Output:\njson{\n  \"platform\": \"LinkedIn\",\n  \"roles\": [\"AI automation specialist\", \"AI automation engineer\"],\n  \"lead_count\": 10,\n  \"filters\": [\"AI automation experience\", \"automation tools\"],\n  \"location\": \"Mumbai\",\n  \"keywords\": [\"AI\", \"automation\", \"machine learning\", \"artificial intelligence\"]\n}\nInput: \"Find 25 senior software engineers at YC startups in San Francisco with email addresses\"\nExpected Output:\njson{\n  \"platform\": \"LinkedIn\",\n  \"roles\": [\"senior software engineer\", \"software engineer\"],\n  \"lead_count\": 25,\n  \"filters\": [\"YC company\", \"startup\", \"senior level\", \"email available\"],\n  \"location\": \"San Francisco\",\n  \"keywords\": [\"software engineer\", \"Y Combinator\", \"startup\", \"senior\"]\n}\n\n\"example_outputs\": {\n    \"example_1\": {\n      \"input\": \"search for profile which have AI automation and are located in Mumbai\",\n      \"output\": {\n        \"platform\": \"LinkedIn\",\n        \"roles\": [\"AI automation specialist\", \"AI automation engineer\"],\n        \"lead_count\": 10,\n        \"filters\": [\"AI automation experience\", \"automation tools\"],\n        \"location\": \"Mumbai\",\n        \"keywords\": [\"AI\", \"automation\", \"machine learning\", \"artificial intelligence\"]\n      }\n    },\n    \"example_2\": {\n      \"input\": \"Find 25 senior software engineers at YC startups in San Francisco with email addresses\",\n      \"output\": {\n        \"platform\": \"LinkedIn\",\n        \"roles\": [\"senior software engineer\", \"software engineer\"],\n        \"lead_count\": 25,\n        \"filters\": [\"YC company\", \"startup\", \"senior level\", \"email available\"],\n        \"location\": \"San Francisco\",\n        \"keywords\": [\"software engineer\", \"Y Combinator\", \"startup\", \"senior\"]\n      }\n    },\n    \"example_3\": {\n      \"input\": \"Scrape LinkedIn for AI/ML interns or internship opportunities at startups that have recently received funding. I want at least 20 valid leads\",\n      \"output\": {\n        \"platform\": \"LinkedIn\",\n        \"roles\": [\"AI intern\", \"ML intern\", \"machine learning intern\", \"artificial intelligence intern\"],\n        \"lead_count\": 20,\n        \"filters\": [\"startup\", \"recently funded\", \"internship\", \"series A\", \"series B\", \"venture capital\"],\n        \"location\": \"\",\n        \"keywords\": [\"AI\", \"ML\", \"machine learning\", \"artificial intelligence\", \"intern\", \"startup\", \"funding\"]\n      }\n    },\n    \"example_4\": {\n      \"input\": \"Get me 50 CTOs from fintech companies in New York or remote\",\n      \"output\": {\n        \"platform\": \"LinkedIn\",\n        \"roles\": [\"CTO\", \"Chief Technology Officer\", \"VP Engineering\"],\n        \"lead_count\": 50,\n        \"filters\": [\"fintech\", \"financial technology\", \"C-level\", \"executive\"],\n        \"location\": \"New York OR remote\",\n        \"keywords\": [\"CTO\", \"fintech\", \"financial technology\", \"chief technology officer\"]\n      }\n    },\n    \"example_5\": {\n      \"input\": \"Find founders on Linkedin who raised Series A in the last 6 months\",\n      \"output\": {\n        \"platform\": \"Linkedin\",\n        \"roles\": [\"founder\", \"CEO\", \"co-founder\"],\n        \"lead_count\": 10,\n        \"filters\": [\"series A\", \"recently funded\", \"last 6 months\", \"raised funding\"],\n        \"location\": \"\",\n        \"keywords\": [\"founder\", \"CEO\", \"series A\", \"funding\", \"startup\"]\n      }\n    },\n    \"example_6\": {\n      \"input\": \"Search Linkedin for React developers with 5+ years experience who work at unicorn companies\",\n      \"output\": {\n        \"platform\": \"Linkedin\",\n        \"roles\": [\"React developer\", \"Frontend developer\", \"Full-stack developer\"],\n        \"lead_count\": 10,\n        \"filters\": [\"5+ years experience\", \"unicorn company\", \"senior level\", \"billion dollar valuation\"],\n        \"location\": \"\",\n        \"keywords\": [\"React\", \"JavaScript\", \"frontend\", \"unicorn\", \"developer\"]\n      }\n    }\nUser request: \n{{ $json.chatInput }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -336,
+        192
+      ],
+      "id": "21d08e8b-33e2-4a0a-b646-52e855cef53c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// LinkedIn Profile Search Query Builder - Profile Only\nconst input = items[0].json.output;\n\n// Extract and normalize data\nconst roles = input.roles || [];\nconst leadCount = input.lead_count || input.leadCount || 10;\nconst filters = input.filters || [];\nconst location = input.location || '';\nconst keywords = input.keywords || [];\n\n// Helper function to create quoted phrases with OR logic\nfunction createQuotedTerms(terms) {\n  return terms.filter(term => term && term.trim())\n              .map(term => `\"${term.trim()}\"`)\n              .join(' OR ');\n}\n\n// Helper function to build location query\nfunction buildLocationQuery(location) {\n  if (!location) return '';\n  \n  // Handle multiple locations separated by OR, comma, or \"or\"\n  const locationTerms = location.split(/\\s+(?:OR|or)\\s+|,\\s*/)\n    .map(loc => loc.trim())\n    .filter(loc => loc);\n  \n  if (locationTerms.length === 1) {\n    return `\"${locationTerms[0]}\"`;\n  } else if (locationTerms.length > 1) {\n    return `(${locationTerms.map(loc => `\"${loc}\"`).join(' OR ')})`;\n  }\n  return '';\n}\n\n// Build single LinkedIn profile search query\nconst roleQuery = createQuotedTerms(roles);\nconst locationQuery = buildLocationQuery(location);\nconst filterQuery = filters.length > 0 ? createQuotedTerms(filters) : '';\nconst keywordQuery = keywords.length > 0 ? createQuotedTerms(keywords) : '';\n\n// Build LinkedIn profile query\nlet profileQuery = 'site:linkedin.com/in';\nconst queryParts = [];\n\nif (roleQuery) queryParts.push(roleQuery);\nif (locationQuery) queryParts.push(locationQuery);\nif (filterQuery) queryParts.push(filterQuery);\nif (keywordQuery && !roleQuery) queryParts.push(keywordQuery); // Only add keywords if no roles\n\nif (queryParts.length > 0) {\n  profileQuery += ` ${queryParts.join(' ')}`;\n}\n\n// Return single result for LinkedIn profiles only\nreturn [{\n  json: {\n    searchQuery: profileQuery.trim(),\n    leadCount: leadCount,\n    platform: 'linkedin'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        192
+      ],
+      "id": "c349d5e0-388a-4dec-a84f-719dbde64665",
+      "name": "LinkedIn Search Builder"
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "=google"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.searchQuery }}"
+            },
+            {
+              "name": "api_key",
+              "value": "Add your Serp Api Here"
+            },
+            {
+              "name": "num",
+              "value": "={{ $json.leadCount }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        192
+      ],
+      "id": "1e507949-aa15-452c-84b6-c1bacd950f11",
+      "name": "Google Search Engine"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Cptu8ki8kc1gNuxgzDdNnweso448yxZGS7HCxLH1hjs",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Scrapper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Cptu8ki8kc1gNuxgzDdNnweso448yxZGS7HCxLH1hjs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xTurre2vkXUUn13z0lHHjYMeDVaSINt_o26q6oiRU1Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Role": "={{ $json.role }}",
+            "Connections": "={{ $json.connections }}",
+            "Company": "={{ $json.company }}",
+            "LinkedinUrl": "={{ $json.linkedinUrl }}",
+            "Email": "={{ $json.email }}",
+            "Snippet": "={{ $json.snippet }}",
+            "ScrappedAt": "={{ $json.scrapedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Connections",
+              "displayName": "Connections",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedinUrl",
+              "displayName": "LinkedinUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Snippet",
+              "displayName": "Snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ScrappedAt",
+              "displayName": "ScrappedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        832,
+        256
+      ],
+      "id": "e4aae9b3-3297-41a1-a402-dc4837dd723c",
+      "name": "Google Sheets"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This array will hold all parsed leads\nconst leads = [];\n\n// Simple regex to find emails in text\nconst emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-z]{2,}/gi;\n\n// Loop over the 'organic_results' array from SerpAPI\nfor (const result of items[0].json.organic_results || []) {\n\n  // Extract title, link, and snippet from each search result\n  const nameAndRole = result.title || \"\";           // e.g. \"Jane Doe - SaaS Founder\"\n  const link = result.link || \"\";                   // LinkedIn profile URL\n  const connections = result.displayed_link || \"\";   // 590+ followers\n  const snippet = result.snippet || \"\";             // Description snippet from Google\n  const extensions = result.rich_snippet?.top?.extensions || [];  // Additional info, often includes company\n\n  // Split title into name and role (based on \" - \")\n  const [namePart, rolePart] = nameAndRole.split(\" - \");\n\n  // Try to get company name from extensions (usually in 3rd position)\n  let company = \"\";\n  if (extensions.length >= 3 && typeof extensions[2] === \"string\") {\n    company = extensions[2].trim(); // Safe trim only if it's a string\n  }\n\n  // Try to extract email from snippet using regex\n  let emails = snippet.match(emailRegex);\n  // Use the first email if available, else empty string\n  let email = (emails && emails.length > 0) ? emails[0].trim() : \"\";\n\n  // Push the cleaned lead data into the leads array\n  leads.push({\n    json: {\n      name: namePart?.trim() || \"\",       // Safely trim name\n      role: rolePart?.trim() || \"\",       // Safely trim role\n      company: company,                   // Already trimmed\n      connections: connections,\n      linkedinUrl: link,\n      email: email,                      // Extracted email if found\n      snippet: snippet,\n      scrapedAt: new Date().toISOString() // Timestamp when scraped\n    }\n  });\n}\n\n// Return all extracted leads to the next node\nreturn leads;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        192
+      ],
+      "id": "66e6d166-5464-4a85-b023-4eb028ee9e89",
+      "name": "Lead Data Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        192
+      ],
+      "id": "7e79c859-d061-4f02-9b00-bd57f6669d38",
+      "name": "Chat Input",
+      "webhookId": "7032f2de-08a3-4c78-b6c7-21799ffb6846"
+    },
+    {
+      "parameters": {
+        "content": "## Google Sheets Api\n\nCreate new Credentials\nhttps://docs.n8n.io/integrations/builtin/credentials/google/oauth-single-service/?utm_source=n8n_app&utm_medium=credential_settings&utm_campaign=create_new_credentials_modal",
+        "height": 268
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "7cb62397-55b8-4f13-9d05-3d47ccc013a1",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "**Gemini**\n\nCreate an API key for Gemini https://aistudio.google.com/app/apikey\n\nGoogle AI Studio\nhttps://aistudio.google.com/\n\n",
+        "height": 252,
+        "width": 232
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "c256a440-60c4-4029-99f9-4a1cc78ad753",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Open AI Api\n\nhttps://platform.openai.com/api-keys",
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "532371af-9072-4456-aa27-e0d8d3594df0",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Serp Api \n\nhttps://serpapi.com/"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "f3110640-80b9-456f-b0b8-7a1d4460d748",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "\n\n# 🎤Author : Aditya Das\n\n\n##  YouTube → https://www.youtube.com/channel/UCUYswYm83k_1PYdN-1NAk4Q\n\n##  My AI Automation Community → https://www.skool.com/agents-space-1751\n\n\n\n## 🟢 Work with us →  https://www.triggerx.org/\n\n## 🟢 Get More Template → https://adityadasn8n.gumroad.com/",
+        "height": 704,
+        "width": 928,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1584,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "67f7f69d-bb93-42ec-8a98-82e8539ae75d",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {
+    "Chat Input": [
+      {
+        "json": {
+          "sessionId": "ded3664bbe0e4fb581f42975367f3bfe",
+          "action": "sendMessage",
+          "chatInput": "search for profile which have AI automation and are located in Mumbai"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Open Ai": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Structure Validator": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Search Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Search Builder": {
+      "main": [
+        [
+          {
+            "node": "Google Search Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Search Engine": {
+      "main": [
+        [
+          {
+            "node": "Lead Data Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Data Extractor": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4780ed66-35d2-4b20-86eb-73b148b2b0ea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5db7db39d8113c534274c0e844c9de53f233d759a46c6836f74278458992106b"
+  },
+  "id": "UY0xVnvyiBNh2HQp",
+  "tags": []
+}
